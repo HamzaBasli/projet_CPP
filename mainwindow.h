@@ -2,8 +2,22 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "affaire.h"
-#include "arduino.h"
+#include<avocat.h>
+#include<QPainter>
+#include<QPdfWriter>
+#include <QtCharts/QChartView>
+#include <QtWidgets/QApplication>
+#include <QtWidgets/QMainWindow>
+#include <QtCharts/QBarSeries>
+#include <QtCharts/QBarSet>
+#include <QtCharts/QLegend>
+QT_CHARTS_USE_NAMESPACE
+#include <QTextStream>
+#include <QPieSeries>
+#include<QChart>
+#include<QPieSlice>
+#include<QVBoxLayout>
+
 
 namespace Ui {
 class MainWindow;
@@ -18,28 +32,21 @@ public:
     ~MainWindow();
 
 private slots:
+    void on_pb_ajouter_clicked();
 
-    void on_pb_supprimer_clicked();
+    void on_pb_supp_clicked();
 
-    void on_pushbutton_clicked();
+    void on_pb_trier_clicked();
 
-    void on_pushButton_update_clicked();
+    void on_le_rechercher_textChanged();
 
-    void on_pushButton_clicked();
+    void on_le_pdf_clicked();
 
-    void on_pushButton_trie_clicked();
-
-    void on_export_excel_clicked();
-
-    void on_export_fichier_clicked();
+    void on_le_statique_clicked();
 
 private:
     Ui::MainWindow *ui;
-    Affaire A;
-    arduino Ar;
-    QByteArray data;
-public slots:
-    int createPDF();
+    Avocat A ;
 };
 
 #endif // MAINWINDOW_H

@@ -4,9 +4,12 @@
 #
 #-------------------------------------------------
 
-QT       += core gui sql printsupport  serialport
-    quick
-    QT+=charts network
+QT       += sql core gui sql serialport
+QT += printsupport
+QT       += core gui network
+QT       += core gui sql axcontainer printsupport
+QT       += core gui multimedia multimediawidgets
+QT       += charts\
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -27,17 +30,13 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
-    affaire.cpp \
-    arduino.cpp \
-    fichierexel.cpp \
+    avocat.cpp \
         main.cpp \
         mainwindow.cpp \
     connection.cpp
 
 HEADERS += \
-    affaire.h \
-    arduino.h \
-    fichierexel.h \
+    avocat.h \
         mainwindow.h \
     connection.h
 
@@ -48,7 +47,3 @@ FORMS += \
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
-
-RESOURCES += \
-    r1.qrc \
-    styleSheet.qrc

@@ -3,14 +3,16 @@
 #include <QSqlDatabase>
 #include <QSqlError>
 #include <QSqlQuery>
+#include<QPainter>
+#include<QPdfWriter>
 
 class Connection
 {
-    QSqlDatabase db;
+    QSqlDatabase db ;
 public:
     Connection();
-    bool createconnect();
-    void closeConnection();
+    bool createconnection();
+    void closeconnection();
 };
 
 #endif // CONNECTION_H
