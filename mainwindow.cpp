@@ -41,6 +41,37 @@ QT_CHARTS_USE_NAMESPACE
 #include <QTextStream>
 #include <QDataStream>
 #include <QFile>
+#include "employe.h"
+
+#include <QIntValidator>
+#include <QTableWidget>
+#include<QMessageBox>
+#include<QObject>
+#include <QtSql/QSqlQueryModel>
+#include <QMessageBox>
+#include <QtSerialPort/QSerialPort>
+#include <QtSerialPort/QSerialPortInfo>
+
+
+#include "affaire.h"
+#include <QMessageBox>
+#include <QIntValidator>
+#include <iostream>
+#include <QString>
+#include <QPainter>
+#include <QPrinter>
+#include <QPdfWriter>
+#include <QFileDialog>
+#include <QtCharts/QPieSeries>
+#include <QtCharts/QChartView>
+#include <QChartView>
+#include <QPieSeries>
+#include <QPieSlice>
+
+
+
+
+
 
 
 MainWindow::MainWindow(QWidget *parent)
@@ -52,16 +83,54 @@ MainWindow::MainWindow(QWidget *parent)
      ui->tab_salle->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
      ui->tab_salle->setModel(S.afficher());
      sal tmp;
-     int ret=A.connect_arduino(); // lancer la connexion à arduino
+     int ret=AR.connect_arduino(); // lancer la connexion à arduino
      switch(ret){
-     case(0):qDebug()<< "arduino is available and connected to : "<< A.getarduino_port_name();
+     case(0):qDebug()<< "arduino is available and connected to : "<< AR.getarduino_port_name();
          break;
-     case(1):qDebug() << "arduino is available but not connected to :" <<A.getarduino_port_name();
+     case(1):qDebug() << "arduino is available but not connected to :" <<AR.getarduino_port_name();
         break;
      case(-1):qDebug() << "arduino is not available";
      }
-      QObject::connect(A.getserial(),SIGNAL(readyRead()),this,SLOT(on_tmp_butt_clicked())); // permet de lancer
+      QObject::connect(AR.getserial(),SIGNAL(readyRead()),this,SLOT(on_tmp_butt_clicked())); // permet de lancer
       //le slot update_label suite à la reception du signal readyRead (reception des données).
+
+
+      ui->lineEdit_3->setValidator(new QIntValidator(11111111, 99999999,ui->lineEdit_3 ));
+      ui->lineEdit_2->setValidator(new QIntValidator(11111111, 99999999, ui->lineEdit_2));
+      ui->table_employe->setModel(Etmp.afficher());
+      int h=Etmp.sexeH(),f=Etmp.sexeF();
+          QPieSeries *series1 = new QPieSeries();
+          series1->append("HOMME",h);
+          series1->append("FEMME",f);
+          QChart *chart1=new QChart();
+          chart1 ->addSeries(series1);
+          chart1->setTitle("Sexe");
+          QChartView *chartview1=new QChartView(chart1);
+          chartview1->setParent(ui->horizontalFrame);
+
+
+
+          QPieSeries *series2 = new QPieSeries();
+             series2->setHoleSize(0.35);
+
+             QPieSlice *slice = series2->append("administratif", A.statistique("administratif"));
+
+             slice->setExploded();
+             slice->setLabelVisible();
+             series2->append("penale", A.statistique("penale"));
+             series2->append("civile", A.statistique("civile"));
+
+             QChart *chart2 = new QChart();
+             chart2->addSeries(series2);
+             chart2->setAnimationOptions(QChart::SeriesAnimations);
+             chart2->setTitle("statistiques par departement");
+             chart2->setTheme(QChart::ChartThemeBlueIcy);
+
+
+             QChartView *chartview2 = new QChartView(chart2);
+             chartview2->setRenderHint(QPainter::Antialiasing);
+
+             chartview2->setParent(ui->horizontalFrame_3);
 }
 
 MainWindow::~MainWindow()
@@ -277,7 +346,7 @@ void MainWindow::on_pushButton_statistique_clicked()
 void MainWindow::on_tmp_butt_clicked()
 {
 
-    data=A.read_from_arduino();
+    data=AR.read_from_arduino();
         QMessageBox msg;
 
         if(data<="25.0")
@@ -288,4 +357,432 @@ void MainWindow::on_tmp_butt_clicked()
         msg.exec();
 
 }
+void MainWindow::on_pushButton_ajouter_clicked()
+{
+    int CIN=ui->lineEdit_2->text().toInt();
+    int id=ui->lineEdit_3->text().toInt();
+    int date=ui->lineEdit_9->text().toInt();
+    QString nometprenom=ui->lineEdit->text();
+    QString poste=ui->lineEdit_4->text();
+    QString sexe=ui->lineEdit_8->currentText();
+    employe E(CIN,nometprenom,id,date,poste,sexe);
+    bool test=E.ajouter();
+    if (test)
+    {
+        ui->table_employe->setModel(Etmp.afficher());//refresh
+        int h=Etmp.sexeH(),f=Etmp.sexeF();
+            QPieSeries *series = new QPieSeries();
+            series->append("HOMME",h);
+            series->append("FEMME",f);
+            QChart *chart=new QChart();
+            chart ->addSeries(series);
+            chart->setTitle("Sexe");
+            QChartView *chartview=new QChartView(chart);
+            chartview->setParent(ui->horizontalFrame);
+        QMessageBox::information(nullptr,QObject::tr("ok"),
+                              QObject::tr("ajout effectué\n"
+                                          "click cancel to exit."),QMessageBox::Cancel);
+    }
+    else QMessageBox::critical(nullptr,QObject::tr("not ok"),
+            QObject::tr("ajout non effectué\n"
+                        "click cancel to exit."),QMessageBox::Cancel);
 
+
+}
+void MainWindow::on_pushButton_supprimer_clicked()
+{
+    int CINs=ui->lineEdit_CINs->text().toInt();
+    bool test= Etmp.supprimer(CINs);
+    if (test)
+    {
+        ui->table_employe->setModel(Etmp.afficher());//refresh
+        int h=Etmp.sexeH(),f=Etmp.sexeF();
+            QPieSeries *series = new QPieSeries();
+            series->append("HOMME",h);
+            series->append("FEMME",f);
+            QChart *chart=new QChart();
+            chart ->addSeries(series);
+            chart->setTitle("Sexe");
+            QChartView *chartview=new QChartView(chart);
+            chartview->setParent(ui->horizontalFrame);
+        QMessageBox::information(nullptr,QObject::tr("ok"),
+                                 QObject::tr("suppression effectueé \n"
+                                             "click cancel to exit."),QMessageBox::Cancel);
+    }
+    else QMessageBox::critical(nullptr,QObject::tr("not ok"),
+                               QObject::tr("suppersion non effectue.\n"
+                                           "click cancel to exit"),QMessageBox::Cancel);
+
+    }
+void MainWindow::on_pushbutton_modifier_clicked()
+{
+    int CIN=ui->lineEdit_CIN2->text().toInt();
+    int id=ui->lineEdit_ide->text().toInt();
+    int date=ui->lineEdit_date->text().toInt();
+    QString nometprenom=ui->lineEdit_np->text();
+    QString poste=ui->lineEdit_poste->text();
+    QString sexe=ui->lineEdit_sexe->text();
+    employe E(CIN,nometprenom,id,date,poste,sexe);
+    bool test=E.modifier();
+    if (test)
+    {
+        ui->table_employe->setModel(Etmp.afficher());//refresh
+        int h=Etmp.sexeH(),f=Etmp.sexeF();
+            QPieSeries *series = new QPieSeries();
+            series->append("HOMME",h);
+            series->append("FEMME",f);
+            QChart *chart=new QChart();
+            chart ->addSeries(series);
+            chart->setTitle("Sexe");
+            QChartView *chartview=new QChartView(chart);
+            chartview->setParent(ui->horizontalFrame);
+        QMessageBox::information(nullptr,QObject::tr("ok"),
+                              QObject::tr("ajout effectué\n"
+                                          "click cancel to exit."),QMessageBox::Cancel);
+    }
+    else QMessageBox::critical(nullptr,QObject::tr("not ok"),
+            QObject::tr("ajout non effectué\n"
+                        "click cancel to exit."),QMessageBox::Cancel);
+
+    }
+void MainWindow::on_pushbutton_actualiser_clicked()
+{
+
+QString critere=ui->comboBox->currentText();
+if(critere!="")
+
+    ui->table_employe->setModel(Etmp.trier(critere));
+else
+    ui->table_employe->setModel(Etmp.afficher());
+}
+void MainWindow::on_pushButton_chercher_clicked()
+{
+
+QString critere=ui->lineEdit_5->text();
+if(critere!="")
+ui->table_employe->setModel(Etmp.rechercher(critere));
+
+else
+ui->table_employe->setModel(Etmp.afficher());
+
+}
+
+void MainWindow::on_pb_supprimer_2_clicked()
+{
+    Affaire A1; A1.setid(ui->le_id_supp_3->text().toInt());
+    bool test=A1.supprimer(A1.getid());
+    QMessageBox msgbox;
+    if(test)
+    {
+        msgbox.setText("Suppression avec succes.");
+        ui->tab_affaires_2->setModel(A.afficher());
+    }
+    else
+        msgbox.setText("Echec de suppression.");
+        msgbox.exec();
+}
+
+void MainWindow::on_pushbutton_2_clicked()
+{
+    int id=ui->le_id_4->text().toInt();
+    QString nom=ui->le_nom_4->text();
+    QString etat=ui->le_etat_4->text();
+    QString type=ui->le_type_6->text();
+    int jour=ui->lineEdit_jour_2->text().toInt();
+    int mois=ui->lineEdit_mois_2->text().toInt();
+    int annees=ui->lineEdit_annees_2->text().toInt();
+    Affaire A(id,nom,type,etat,jour,mois,annees);
+    bool test=A.ajouter();
+    if(test)
+        {
+          ui->tab_affaires_2->setModel(A.afficher());
+
+           QMessageBox::information(nullptr, QObject::tr("OK"),
+                                    QObject::tr("Ajout effectué\n"
+                                                "Click cancel to exit."),
+                                    QMessageBox::Cancel);
+        }
+        else
+            QMessageBox::critical(nullptr, QObject::tr("NOT OK"),
+                                     QObject::tr("Ajout non effectué\n"
+                                                 "Click cancel to exit."),
+                                     QMessageBox::Cancel);
+}
+
+void MainWindow::on_pushButton_update_2_clicked()
+{
+    int id=ui->le_id_4->text().toInt();
+    QString nom=ui->le_nom_4->text();
+    QString etat=ui->le_etat_4->text();
+    QString type=ui->le_type_6->text();
+    int jour=ui->lineEdit_jour_2->text().toInt();
+    int mois=ui->lineEdit_mois_2->text().toInt();
+    int annees=ui->lineEdit_annees_2->text().toInt();
+    Affaire A(id,nom,type,etat,jour,mois,annees);
+    bool test=A.update();
+    if(test)
+        {
+         ui->tab_affaires_2->setModel(A.afficher());
+
+           QMessageBox::information(nullptr, QObject::tr("OK"),
+                                    QObject::tr("mise a jour effectuée\n"
+                                                "Click cancel to exit."),
+                                    QMessageBox::Cancel);
+        }
+        else
+            QMessageBox::critical(nullptr, QObject::tr("NOT OK"),
+                                     QObject::tr("mise a jour non effectuée\n"
+                                                 "Click cancel to exit."),
+                                     QMessageBox::Cancel);
+
+
+}
+
+void MainWindow::on_pushButton_10_clicked()
+{
+    Affaire A;
+    QString valeur=ui->lineEdit_recherche_2->text();
+    QString Atype=ui->comboBox_4->currentText();
+    if(Atype=="ID")
+        ui->tab_affaires_2->setModel(A.rechercheid(valeur));
+    else
+        if(Atype=="Nom")
+            ui->tab_affaires_2->setModel(A.recherchernom(valeur));
+}
+
+void MainWindow::on_pushButton_trie_2_clicked()
+{
+    Affaire A;
+    QString Atype=ui->comboBox_5->currentText();
+    if(Atype=="ID")
+
+        ui->tab_affaires_2->setModel(A.triid());
+
+    else
+        if(Atype=="Etat")
+
+            ui->tab_affaires_2->setModel(A.trietat());
+
+        else
+            if(Atype=="Type")
+
+                ui->tab_affaires_2->setModel(A.trietype());
+}
+int MainWindow::createPDF()
+{
+    QPrinter printer;
+
+         QString id=ui->le_id_4->text();
+         QString nom=ui->le_nom_4->text();
+         QString etat=ui->le_etat_4->text();
+         QString type=ui->le_type_6->text();
+         QString jour=ui->lineEdit_jour_2->text();
+         QString mois=ui->lineEdit_mois_2->text();
+         QString annees=ui->lineEdit_annees_2->text();
+          printer.setOutputFormat(QPrinter::PdfFormat);
+          printer.setOutputFileName("fishier_affaires.pdf");
+          QPainter painter;
+          QImage image(":/image/tribunal.jpg");
+          if (! painter.begin(&printer)) { // failed to open file
+              qWarning("failed to open file, is it writable?");
+              return 1;
+          }
+          painter.drawImage(-40,-40,image);
+          painter.drawText(10, 10, "identifiant");
+          painter.drawText(100, 10,id);
+          painter.drawText(10, 30, "nom");
+          painter.drawText(100, 30,nom);
+          painter.drawText(10, 50,"etat");
+          painter.drawText(100, 50,etat);
+          painter.drawText(10, 70,"type");
+          painter.drawText(150, 70,type);
+          painter.drawText(10,90,"jour");
+          painter.drawText(100, 90,jour);
+          painter.drawText(10, 110,"mois");
+          painter.drawText(100, 110,mois);
+          painter.drawText(10, 130,"annees");
+          painter.drawText(100, 130,annees);
+
+          if (! printer.newPage()) {
+              qWarning("failed in flushing page to disk, disk full?");
+              return 1;
+          }
+          int question = QMessageBox::question(this, "voulez vous afficher le fichier PDF", "PDF Enregistré:Voulez vous l'Afficher?", QMessageBox::Yes |  QMessageBox::No);
+                                          if (question == QMessageBox::Yes)
+                                          {
+                                              QDesktopServices::openUrl(QUrl::fromLocalFile("fishier_affaires.pdf"));
+
+                                              painter.end();
+                                          }
+          painter.end();
+}
+
+
+/*void MainWindow::on_pb_ajouter_clicked1()
+{
+    int id=ui->le_id->text().toInt() ;
+    int cin=ui->le_cin->text().toInt() ;
+    int nbrcas=ui->le_nbrcas->text().toInt() ;
+    QString nom=ui->le_nom->text();
+    QString prenom=ui->le_prenom->text();
+    QString typecas=ui->le_typecas->text();
+    Avocat AV(id,cin,nbrcas,nom,prenom,typecas);
+
+
+bool test=AV.ajouter();
+QMessageBox msgBox ;
+   if (test)
+    {
+
+
+       msgBox.setText(("Ajout avec succes"));
+           ui->tab_avocat->setModel(AV.afficher());
+           }
+           else
+            msgBox.setText(("Echec d'ajout"));
+msgBox.exec();
+}*/
+
+void MainWindow::on_pb_trier_clicked()
+{
+    Avocat AV;
+                 ui->tab_avocat->setModel(AV.tri_identifiant());
+                QMessageBox::information(nullptr, QObject::tr("Ok"),
+                     QObject::tr("tri effectué.\n"
+                                 "Click Cancel to exit."), QMessageBox::Cancel);
+                    ui->tab_avocat->setModel(AV.tri_identifiant());
+
+}
+
+void MainWindow::on_pb_supp_clicked()
+{
+    Avocat A1; A1.setid(ui->le_id_supp->text().toInt());
+       bool test=A1.supprimer(A1.getid());
+       QMessageBox msgBox;
+       if(test)
+       {
+           msgBox.setText("Supprimer avec succes .");
+           ui->tab_avocat->setModel(AV.afficher());
+
+       }
+       else
+           msgBox.setText("Echec de suppression ");
+       msgBox.exec();
+}
+
+void MainWindow::on_le_statique_clicked()
+{
+    QPieSeries * series1 = new QPieSeries();
+
+    series1->append("typecas",300);
+
+    series1->append("cin",100);
+
+    series1->append("id",50);
+
+    QChart * chart1=new QChart();
+
+    chart1->addSeries(series1);
+
+    chart1->setTitle("statistique");
+
+    QChartView * chartView1=new QChartView(chart1);
+
+    chartView1->setRenderHints(QPainter::Antialiasing);
+    QVBoxLayout *layout1 = new QVBoxLayout(ui->le_widget);
+    layout1->addWidget(chartView1);
+}
+
+void MainWindow::on_le_pdf_clicked()
+{
+    QString id=ui->le_id->text();
+       QString cin=ui->le_cin->text();
+        QString nom=ui->le_nom->text();
+        QString prenom=ui->le_prenom->text();
+        QString nbrcas=ui->le_nbrcas->text();
+        QString typecas=ui->le_typecas->text();
+        QPdfWriter pdf("C:/Users/eyabe/OneDrive/Bureau/Atelier_Connexion/pdf.pdf");
+        QPainter painter(&pdf);
+        painter.setPen(Qt::red);
+      painter.drawText(4000,400,"avocat ce N:"+id+"");
+        painter.setPen(Qt::black);
+        painter.drawText(4000,400,"avocat ce N:"+cin+"");
+        painter.drawText(3000,1500,"nom:"+nom+"");
+        painter.drawText(2000,1000,"prenom:"+prenom+"");
+        painter.drawText(2000,1000,"nbrcas:"+nbrcas+"");
+        painter.drawText(8000,5000,"typecas:"+typecas+"");
+
+        painter.end();
+
+}
+
+void MainWindow::on_le_rechercher_textChanged()
+{
+    QString rech=ui-> le_rechercher ->text();
+        //ui->tab_avocat->setModel(A.RechercheR(rech));
+
+}
+
+
+void MainWindow::on_pushButton_8_clicked()
+{
+     ui->stackedWidget->setCurrentIndex(1);
+}
+
+void MainWindow::on_pushButton_9_clicked()
+{
+     ui->stackedWidget->setCurrentIndex(2);
+}
+
+void MainWindow::on_pushButton_13_clicked()
+{
+     ui->stackedWidget->setCurrentIndex(3);
+}
+
+void MainWindow::on_pushButton_14_clicked()
+{
+     ui->stackedWidget->setCurrentIndex(0);
+}
+
+void MainWindow::on_pushButton_16_clicked()
+{
+    ui->stackedWidget->setCurrentIndex(4);
+}
+void MainWindow::on_pushButton_17_clicked()
+{
+    ui->stackedWidget->setCurrentIndex(4);
+}
+void MainWindow::on_pushButton_18_clicked()
+{
+    ui->stackedWidget->setCurrentIndex(4);
+}
+void MainWindow::on_pushButton_19_clicked()
+{
+    ui->stackedWidget->setCurrentIndex(4);
+}
+
+void MainWindow::on_pb_ajouter_2_clicked()
+{
+    int id=ui->le_id->text().toInt() ;
+       int cin=ui->le_cin->text().toInt() ;
+       int nbrcas=ui->le_nbrcas->text().toInt() ;
+       QString nom=ui->le_nom->text();
+       QString prenom=ui->le_prenom->text();
+       QString typecas=ui->le_typecas->text();
+       Avocat A(id,cin,nbrcas,nom,prenom,typecas);
+
+
+   bool test=A.ajouter();
+   QMessageBox msgBox ;
+      if (test)
+       {
+
+
+          msgBox.setText(("Ajout avec succes"));
+              ui->tab_avocat->setModel(A.afficher());
+              }
+              else
+               msgBox.setText(("Echec d'ajout"));
+   msgBox.exec();
+
+}

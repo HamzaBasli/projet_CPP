@@ -8,6 +8,15 @@
 #include<QChart>
 #include<QPieSlice>
 
+#include "employe.h"
+#include <QtCharts>
+#include <QChartView>
+#include <QPieSeries>
+
+#include "affaire.h"
+#include "avocat.h"
+
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -53,13 +62,63 @@ private slots:
 
 
     void on_tmp_butt_clicked();
+    void on_pushButton_ajouter_clicked();
+    void on_pushButton_supprimer_clicked();
+    void on_pushbutton_modifier_clicked();
+    void on_pushbutton_actualiser_clicked();
+    void on_pushButton_chercher_clicked();
 
+
+
+    void on_pb_supprimer_2_clicked();
+    void on_pushbutton_2_clicked();
+    void on_pushButton_update_2_clicked();
+    void on_pushButton_10_clicked();
+    void on_pushButton_trie_2_clicked();
+
+
+    void on_pb_ajouter_clicked1();
+
+    void on_pb_trier_clicked();
+
+    void on_pb_supp_clicked();
+
+    void on_le_statique_clicked();
+
+    void on_le_pdf_clicked();
+
+    void on_le_rechercher_textChanged();
+
+
+    void on_pb_ajouter_3_clicked();
+
+    void on_pushButton_8_clicked();
+
+    void on_pushButton_9_clicked();
+
+    void on_pushButton_13_clicked();
+
+    void on_pushButton_14_clicked();
+
+    void on_pushButton_16_clicked();
+    void on_pushButton_17_clicked();
+    void on_pushButton_18_clicked();
+    void on_pushButton_19_clicked();
+
+    void on_pb_ajouter_2_clicked();
 
 private:
     Ui::MainWindow *ui;
     sal S;
     QByteArray data; // variable contenant les données reçues
 
-    ard A;
+    ard AR;
+    employe  Etmp;
+    QByteArray RPM;
+
+    Affaire A;
+    Avocat AV;
+public slots:
+    int createPDF();
 };
 #endif // MAINWINDOW_H

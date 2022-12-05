@@ -23,21 +23,30 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    affaire.cpp \
     ard.cpp \
+    avocat.cpp \
     conn.cpp \
+    employe.cpp \
+    login.cpp \
     mail.cpp \
     main.cpp \
     mainwindow.cpp \
     sal.cpp
 
 HEADERS += \
+    affaire.h \
     ard.h \
+    avocat.h \
     conn.h \
+    employe.h \
+    login.h \
     mail.h \
     mainwindow.h \
     sal.h
 
 FORMS += \
+    login.ui \
     mainwindow.ui
 
 # Default rules for deployment.
